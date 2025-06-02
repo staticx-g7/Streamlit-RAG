@@ -6,6 +6,8 @@ numpy>=1.26.0
 python-dateutil>=2.9.0
 pytz>=2024.1
 typing-extensions>=4.12.0
+streamlit-flow-component>=0.1.0
+streamlit-elements>=0.1.0
 
 # requirements-dev.txt
 pytest>=8.0.0

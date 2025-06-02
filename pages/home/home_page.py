@@ -6,39 +6,71 @@ from pathlib import Path
 # Add src to path for imports
 sys.path.append(str(Path(__file__).parent.parent.parent / "src"))
 
-# Use absolute imports instead of relative imports
 from config.settings import AppConfig
-from components.sidebar import render_main_sidebar
-from components.board import render_infinite_board
-from components.node_editor import render_node_editor
+from components.drag_drop_sidebar import render_drag_drop_sidebar
+from components.flow_board import render_flow_board
 from core.board_manager import BoardManager
 
 
 def render_home_page():
-    """Render the main home page interface"""
+    """Render the main home page interface with full screen drag-drop board"""
 
     # Initialize board manager
     if 'board_manager' not in st.session_state:
         st.session_state.board_manager = BoardManager()
 
-    # Main title
-    st.title(f"{AppConfig.APP_ICON} {AppConfig.APP_NAME}")
-    st.markdown("**Interactive infinite board with draggable nodes and connections**")
 
-    # Create main layout
-    col1, col2 = st.columns([3, 1])
+    # Custom CSS for full screen experience
+    st.markdown("""
+    <style>
+        .main .block-container {
+            padding-top: 1rem;
+            padding-bottom: 0rem;
+            padding-left: 1rem;
+            padding-right: 1rem;
+            max-width: none;
+        }
 
-    with col1:
-        # Main board area
-        render_infinite_board()
+        .stSidebar {
+            background-color: #f8f9fa;
+        }
 
-    with col2:
-        # Node editor panel
-        render_node_editor()
+        .drag-node {
+            padding: 8px 12px;
+            margin: 4px 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 8px;
+            cursor: grab;
+            text-align: center;
+            font-weight: 500;
+            transition: transform 0.2s ease;
+        }
 
-    # Render sidebar (this will appear in the sidebar)
-    render_main_sidebar()
+        .drag-node:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
 
-    # Footer
-    st.markdown("---")
-    st.markdown("**Built with Streamlit** • *Infinite possibilities on an infinite board* 🚀")
+        .flow-container {
+            height: calc(100vh - 100px);
+            border: 2px dashed #e0e0e0;
+            border-radius: 12px;
+            background: linear-gradient(45deg, #f8f9fa 25%, transparent 25%), 
+                        linear-gradient(-45deg, #f8f9fa 25%, transparent 25%), 
+                        linear-gradient(45deg, transparent 75%, #f8f9fa 75%), 
+                        linear-gradient(-45deg, transparent 75%, #f8f9fa 75%);
+            background-size: 20px 20px;
+            background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+        }
+    </style>
+    """, unsafe_allow_html=True)
+
+    # Main title (compact)
+    st.markdown(f"# {AppConfig.APP_ICON} {AppConfig.APP_NAME}")
+
+    # Render drag-drop sidebar
+    render_drag_drop_sidebar()
+
+    # Main flow board (full screen)
+    render_flow_board()

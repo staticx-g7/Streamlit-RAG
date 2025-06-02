@@ -102,3 +102,87 @@ class BoardManager:
     def get_timestamp(self) -> str:
         """Get current timestamp for file naming"""
         return datetime.now().strftime('%Y%m%d_%H%M%S')
+
+
+# src/core/board_manager.py (add these methods to existing class)
+
+def get_node_by_position(self, x: float, y: float, tolerance: float = 50) -> Optional[Node]:
+    """Get node near a specific position"""
+    for node in self.nodes.values():
+        if (abs(node.x - x) < tolerance and abs(node.y - y) < tolerance):
+            return node
+    return None
+
+
+def auto_connect_nearby_nodes(self, max_distance: float = 200):
+    """Automatically connect nodes that are close to each other"""
+    nodes_list = list(self.nodes.values())
+
+    for i, from_node in enumerate(nodes_list):
+        for to_node in nodes_list[i + 1:]:
+            distance = ((from_node.x - to_node.x) ** 2 + (from_node.y - to_node.y) ** 2) ** 0.5
+
+            if distance < max_distance and from_node.output_ports and to_node.input_ports:
+                # Check if not already connected
+                existing = any(
+                    conn.from_node_id == from_node.id and conn.to_node_id == to_node.id
+                    for conn in self.connections
+                )
+
+                if not existing:
+                    self.add_connection(
+                        from_node.id, from_node.output_ports[0].id,
+                        to_node.id, to_node.input_ports[0].id
+                    )
+
+
+def optimize_layout(self):
+    """Optimize node layout using force-directed algorithm"""
+    if len(self.nodes) < 2:
+        return
+
+    nodes_list = list(self.nodes.values())
+
+    # Simple force-directed layout
+    for _ in range(50):  # iterations
+        forces = {node.id: {'x': 0, 'y': 0} for node in nodes_list}
+
+        # Repulsion between all nodes
+        for i, node1 in enumerate(nodes_list):
+            for node2 in nodes_list[i + 1:]:
+                dx = node2.x - node1.x
+                dy = node2.y - node1.y
+                distance = max((dx ** 2 + dy ** 2) ** 0.5, 1)
+
+                force = 1000 / (distance ** 2)
+                fx = force * dx / distance
+                fy = force * dy / distance
+
+                forces[node1.id]['x'] -= fx
+                forces[node1.id]['y'] -= fy
+                forces[node2.id]['x'] += fx
+                forces[node2.id]['y'] += fy
+
+        # Attraction for connected nodes
+        for conn in self.connections:
+            from_node = self.nodes.get(conn.from_node_id)
+            to_node = self.nodes.get(conn.to_node_id)
+
+            if from_node and to_node:
+                dx = to_node.x - from_node.x
+                dy = to_node.y - from_node.y
+                distance = max((dx ** 2 + dy ** 2) ** 0.5, 1)
+
+                force = distance * 0.01
+                fx = force * dx / distance
+                fy = force * dy / distance
+
+                forces[from_node.id]['x'] += fx
+                forces[from_node.id]['y'] += fy
+                forces[to_node.id]['x'] -= fx
+                forces[to_node.id]['y'] -= fy
+
+        # Apply forces
+        for node in nodes_list:
+            node.x += forces[node.id]['x'] * 0.1
+            node.y += forces[node.id]['y'] * 0.1
